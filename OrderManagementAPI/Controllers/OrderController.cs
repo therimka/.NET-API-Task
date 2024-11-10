@@ -148,9 +148,26 @@ namespace OrderManagementAPI.Controllers
             var order = await _context.Order
                 .Include(o => o.OrderItems)
                 .FirstOrDefaultAsync(o => o.OrderID == id);
+
             if (order == null)
             {
                 return NotFound();
+            }
+
+            // Paskam ber commit para se ta shtoja kete pjese :(((
+            if (order.Status != "Pending")
+            {
+                return BadRequest("Only orders with 'Pending' status can be deleted.");
+            }
+
+            
+            foreach (var orderItem in order.OrderItems)
+            {
+                var product = await _context.Product.FindAsync(orderItem.ProductID);
+                if (product != null)
+                {
+                    product.StockQuantity += orderItem.Quantity;
+                }
             }
 
             
